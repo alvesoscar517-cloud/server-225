@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark War Survival - Capital Battle Strategy</title>
+    <link rel="icon" type="image/webp" href="pic/1736520990373_upscayl_4x_digital-art-4x-removebg-preview.webp">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        html::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0d1117;
+            min-height: 100vh;
+            color: #e6edf3;
+            padding: 20px;
+            line-height: 1.8;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('pic/1738738811087_upscayl_4x_digital-art-4x-removebg-preview.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+            filter: blur(2px);
+            z-index: -1;
+        }
+        .lang-selector {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+        }
+        .custom-select {
+            position: relative;
+            width: 160px;
+        }
+        .select-selected {
+            background: linear-gradient(135deg, #21262d, #161b22);
+            color: #e6edf3;
+            padding: 12px 16px;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .select-selected:hover {
+            border-color: #58a6ff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+        }
+        .select-selected::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid #8b949e;
+            transition: transform 0.2s ease;
+        }
+        .select-selected.open::after {
+            transform: rotate(180deg);
+        }
+        .select-selected.open {
+            border-color: #58a6ff;
+            border-radius: 8px 8px 0 0;
+        }
+        .select-items {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #161b22;
+            border: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            z-index: 100;
+        }
+        .select-items.open {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #58a6ff;
+            border-top: none;
+        }
+        .select-items::-webkit-scrollbar {
+            display: none;
+        }
+        .select-items {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .select-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: #c9d1d9;
+            font-size: 14px;
+        }
+        .select-item:hover {
+            background: #238636;
+            color: #fff;
+        }
+        .select-item.selected {
+            background: #1f6feb;
+            color: #fff;
+        }
+        .main-board {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(90deg, #238636, #1f6feb);
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        .header-img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+        }
+        .header-text {
+            text-align: center;
+        }
+        .header-text h1 {
+            color: #fff;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        .header-text p {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.95em;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section-title {
+            font-weight: 700;
+            color: #e6edf3;
+            margin-top: 25px;
+            margin-bottom: 8px;
+        }
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        .content p {
+            margin-bottom: 15px;
+            color: #c9d1d9;
+        }
+        .content ul, .content ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+            color: #c9d1d9;
+        }
+        .content li {
+            margin-bottom: 8px;
+        }
+        .highlight {
+            color: #58a6ff;
+            font-weight: 600;
+        }
+        .warning {
+            color: #d29922;
+            font-weight: 600;
+        }
+        .danger {
+            color: #f85149;
+            font-weight: 600;
+        }
+        .member-name {
+            color: #7ee787;
+            font-weight: 600;
+        }
+        .footer {
+            background: #0d1117;
+            padding: 15px 30px;
+            text-align: center;
+            color: #8b949e;
+            font-size: 0.9em;
+            border-top: 1px solid #30363d;
+        }
+    </style>
+</head>
+<body>
+    <div class="lang-selector">
+        <div class="custom-select">
+            <div class="select-selected" onclick="toggleDropdown()">
+                <span id="selectedLang">English</span>
+            </div>
+            <div class="select-items" id="selectItems">
+                <div class="select-item" data-value="en">English</div>
+                <div class="select-item" data-value="vi">Tiếng Việt</div>
+                <div class="select-item" data-value="zh">中文</div>
+                <div class="select-item" data-value="ja">日本語</div>
+                <div class="select-item" data-value="ko">한국어</div>
+                <div class="select-item" data-value="es">Español</div>
+                <div class="select-item" data-value="fr">Français</div>
+                <div class="select-item" data-value="de">Deutsch</div>
+                <div class="select-item" data-value="pt">Português</div>
+                <div class="select-item" data-value="ru">Русский</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-board">
+        <div class="header">
+            <img src="pic/1736520990373_upscayl_4x_digital-art-4x-removebg-preview.webp" alt="Hero" class="header-img">
+            <div class="header-text">
+                <h1 data-i18n="title">Capital Strategy & Rally Instructions</h1>
+                <p data-i18n="subtitle">Server 225 - State of Supremacy</p>
+            </div>
+            <img src="pic/1738654691679_upscayl_4x_digital-art-4x-removebg-preview.webp" alt="Hero" class="header-img">
+        </div>
+        
+
+
+        <div class="content">
+            <p data-i18n="mainStrategy">I believe the best strategy to secure victory is to <span class="highlight">only allow T5 (Tier 5) members</span> to join Shrimp's rally against the Capital.</p>
+
+            <div class="section-title" data-i18n="howRallyWorksTitle">How the Rally Works:</div>
+            <p data-i18n="howRallyWorks">Your troops are commanded by Shrimp's hero. Therefore, even if you join using Formation 3 or 4, as long as you send T5 troops, the rally will achieve <span class="highlight">maximum strength</span> (Highest HP x ATK x DEF).</p>
+
+            <p><span class="warning" data-i18n="importantNote">Important Note:</span> <span data-i18n="r4Note">R4s cannot kick members from an R5 or R4 rally. Therefore, Shrimp must handle this himself and ensure everyone is informed.</span></p>
+
+            <div class="section-title" data-i18n="memberAssignmentsTitle">Member Assignments:</div>
+            <p><span class="member-name">Crab, Iron, Doctor Strange, Killer Shrimp, Komeko, One Piece, and Sittingbull</span> <span data-i18n="memberAssignments">will focus on Shrimp's rally and the four Outer Towers.</span></p>
+
+            <div class="section-title" data-i18n="t5InstructionsTitle">Instructions for T5 Members:</div>
+            <ul>
+                <li><span class="highlight" data-i18n="formation2">Formation 2:</span> <span data-i18n="formation2Desc">Join Shrimp's rally.</span></li>
+                <li><span class="highlight" data-i18n="formation34">Formations 3 & 4:</span> <span data-i18n="formation34Desc">Must be deployed to the center of the Capital, ready to reinforce immediately when the Capital runs out of troops.</span></li>
+                <li><span class="highlight" data-i18n="formation1">Formation 1:</span> <span data-i18n="formation1Desc">Focus on the four Outer Towers. Capture or garrison them depending on the battle situation.</span></li>
+            </ul>
+
+            <div class="section-title" data-i18n="suzuTitle">Specific Instructions for Suzu:</div>
+            <p data-i18n="suzuDesc">Suzu must initiate a rally first. <span class="highlight">Only T4 or lower</span> troops should join Suzu's rally.</p>
+
+            <div class="section-title" data-i18n="criticalTitle">Critical Reminders:</div>
+            <ol>
+                <li><span class="warning" data-i18n="rallyLock">Rally Lock:</span> <span data-i18n="rallyLockDesc">Once you join a rally against the Capital or a Tower, you cannot create or join another rally against that same target. Please exercise caution.</span></li>
+                <li><span class="warning" data-i18n="contingencyPlan">Contingency Plan:</span> <span data-i18n="contingencyDesc">If the situation deteriorates, <span class="member-name">Crab and Suzu</span> will launch rallies against the Capital first to clear out enemy troops. <span class="member-name">Shrimp</span> will follow up with a rally immediately after.</span></li>
+                <li><span class="warning" data-i18n="garrisonTitle">Garrison Management:</span> <span data-i18n="garrisonDesc">I will continuously kick lower-tier troops from the Capital to ensure it remains filled with T5 troops.</span></li>
+            </ol>
+
+            <div class="section-title danger" data-i18n="forbiddenTitle">Forbidden Actions:</div>
+            <p data-i18n="forbidden1">Members are <span class="danger">strictly forbidden</span> from joining Shrimp's rally (unless it is an emergency, in which case T4 may join).</p>
+            <p data-i18n="forbidden2">All T4 and T3 members: Your first priority is Suzu's rally. Alternatively, join Crab's rally on the Capital or other T5 rallies against the Outer Towers.</p>
+
+            <div class="section-title" data-i18n="deploymentTitle">Deployment Note:</div>
+            <p data-i18n="deploymentDesc">Shrimp will use Formation 2 for towers or joining rallies, while Formations 3 and 4 must be stationed near the Capital for reinforcements when troops are depleted.</p>
+
+            <div class="section-title warning" data-i18n="serverRuleTitle">Server-Wide Rule Change:</div>
+            <p data-i18n="serverRuleDesc">The new Capital event rules do not award points for open-field troop combat (Kill Event). Do not waste troops fighting outside. Focus strictly on the Capital or the Towers if the enemy occupies them.</p>
+        </div>
+
+        <div class="footer">
+            <span data-i18n="date">November 29, 2025</span> | Jokar
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            en: {
+                title: "Capital Strategy & Rally Instructions",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "I believe the best strategy to secure victory is to <span class='highlight'>only allow T5 (Tier 5) members</span> to join Shrimp's rally against the Capital.",
+                howRallyWorksTitle: "How the Rally Works:",
+                howRallyWorks: "Your troops are commanded by Shrimp's hero. Therefore, even if you join using Formation 3 or 4, as long as you send T5 troops, the rally will achieve <span class='highlight'>maximum strength</span> (Highest HP x ATK x DEF).",
+                importantNote: "Important Note:",
+                r4Note: "R4s cannot kick members from an R5 or R4 rally. Therefore, Shrimp must handle this himself and ensure everyone is informed.",
+                memberAssignmentsTitle: "Member Assignments:",
+                memberAssignments: "will focus on Shrimp's rally and the four Outer Towers.",
+                t5InstructionsTitle: "Instructions for T5 Members:",
+                formation2: "Formation 2:",
+                formation2Desc: "Join Shrimp's rally.",
+                formation34: "Formations 3 & 4:",
+                formation34Desc: "Must be deployed to the center of the Capital, ready to reinforce immediately when the Capital runs out of troops.",
+                formation1: "Formation 1:",
+                formation1Desc: "Focus on the four Outer Towers. Capture or garrison them depending on the battle situation.",
+                suzuTitle: "Specific Instructions for Suzu:",
+                suzuDesc: "Suzu must initiate a rally first. <span class='highlight'>Only T4 or lower</span> troops should join Suzu's rally.",
+                criticalTitle: "Critical Reminders:",
+                rallyLock: "Rally Lock:",
+                rallyLockDesc: "Once you join a rally against the Capital or a Tower, you cannot create or join another rally against that same target. Please exercise caution.",
+                contingencyPlan: "Contingency Plan:",
+                contingencyDesc: "If the situation deteriorates, <span class='member-name'>Crab and Suzu</span> will launch rallies against the Capital first to clear out enemy troops. <span class='member-name'>Shrimp</span> will follow up with a rally immediately after.",
+                garrisonTitle: "Garrison Management:",
+                garrisonDesc: "I will continuously kick lower-tier troops from the Capital to ensure it remains filled with T5 troops.",
+                forbiddenTitle: "Forbidden Actions:",
+                forbidden1: "Members are <span class='danger'>strictly forbidden</span> from joining Shrimp's rally (unless it is an emergency, in which case T4 may join).",
+                forbidden2: "All T4 and T3 members: Your first priority is Suzu's rally. Alternatively, join Crab's rally on the Capital or other T5 rallies against the Outer Towers.",
+                deploymentTitle: "Deployment Note:",
+                deploymentDesc: "Shrimp will use Formation 2 for towers or joining rallies, while Formations 3 and 4 must be stationed near the Capital for reinforcements when troops are depleted.",
+                serverRuleTitle: "Server-Wide Rule Change:",
+                serverRuleDesc: "The new Capital event rules do not award points for open-field troop combat (Kill Event). Do not waste troops fighting outside. Focus strictly on the Capital or the Towers if the enemy occupies them.",
+                date: "November 29, 2025"
+            },
+            vi: {
+                title: "Chiến Lược Thủ Đô & Hướng Dẫn Rally",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "Tôi tin rằng chiến lược tốt nhất để giành chiến thắng là <span class='highlight'>chỉ cho phép thành viên T5 (Tier 5)</span> tham gia rally của Shrimp chống lại Thủ Đô.",
+                howRallyWorksTitle: "Cách Rally Hoạt Động:",
+                howRallyWorks: "Quân của bạn được chỉ huy bởi hero của Shrimp. Do đó, dù bạn tham gia bằng Đội hình 3 hoặc 4, miễn là gửi quân T5, rally sẽ đạt <span class='highlight'>sức mạnh tối đa</span> (HP x ATK x DEF cao nhất).",
+                importantNote: "Lưu Ý Quan Trọng:",
+                r4Note: "R4 không thể kick thành viên khỏi rally của R5 hoặc R4. Do đó, Shrimp phải tự xử lý và đảm bảo mọi người được thông báo.",
+                memberAssignmentsTitle: "Phân Công Thành Viên:",
+                memberAssignments: "sẽ tập trung vào rally của Shrimp và bốn Tháp Ngoài.",
+                t5InstructionsTitle: "Hướng Dẫn Cho Thành Viên T5:",
+                formation2: "Đội hình 2:",
+                formation2Desc: "Tham gia rally của Shrimp.",
+                formation34: "Đội hình 3 & 4:",
+                formation34Desc: "Phải triển khai đến trung tâm Thủ Đô, sẵn sàng tiếp viện ngay khi Thủ Đô hết quân.",
+                formation1: "Đội hình 1:",
+                formation1Desc: "Tập trung vào bốn Tháp Ngoài. Chiếm hoặc đồn trú tùy theo tình huống chiến đấu.",
+                suzuTitle: "Hướng Dẫn Riêng Cho Suzu:",
+                suzuDesc: "Suzu phải khởi động rally trước. <span class='highlight'>Chỉ quân T4 hoặc thấp hơn</span> được tham gia rally của Suzu.",
+                criticalTitle: "Nhắc Nhở Quan Trọng:",
+                rallyLock: "Khóa Rally:",
+                rallyLockDesc: "Khi bạn tham gia rally chống Thủ Đô hoặc Tháp, bạn không thể tạo hoặc tham gia rally khác chống cùng mục tiêu đó. Hãy cẩn thận.",
+                contingencyPlan: "Kế Hoạch Dự Phòng:",
+                contingencyDesc: "Nếu tình hình xấu đi, <span class='member-name'>Crab và Suzu</span> sẽ phát động rally chống Thủ Đô trước để dọn quân địch. <span class='member-name'>Shrimp</span> sẽ theo sau ngay lập tức.",
+                garrisonTitle: "Quản Lý Đồn Trú:",
+                garrisonDesc: "Tôi sẽ liên tục kick quân cấp thấp khỏi Thủ Đô để đảm bảo chỉ có quân T5.",
+                forbiddenTitle: "Hành Động Bị Cấm:",
+                forbidden1: "Thành viên <span class='danger'>tuyệt đối không được</span> tham gia rally của Shrimp (trừ trường hợp khẩn cấp, T4 có thể tham gia).",
+                forbidden2: "Tất cả thành viên T4 và T3: Ưu tiên đầu tiên là rally của Suzu. Hoặc tham gia rally của Crab tại Thủ Đô hoặc rally T5 khác tại Tháp Ngoài.",
+                deploymentTitle: "Ghi Chú Triển Khai:",
+                deploymentDesc: "Shrimp sẽ dùng Đội hình 2 cho tháp hoặc tham gia rally, trong khi Đội hình 3 và 4 phải đóng gần Thủ Đô để tiếp viện khi quân cạn kiệt.",
+                serverRuleTitle: "Thay Đổi Luật Server:",
+                serverRuleDesc: "Luật sự kiện Thủ Đô mới không tính điểm cho chiến đấu ngoài trời (Kill Event). Đừng lãng phí quân đánh bên ngoài. Tập trung vào Thủ Đô hoặc Tháp nếu địch chiếm.",
+                date: "29 Tháng 11, 2025"
+            },
+            zh: {
+                title: "首都战略与集结指令",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "我认为确保胜利的最佳策略是<span class='highlight'>只允许T5（5级）成员</span>加入Shrimp对首都的集结。",
+                howRallyWorksTitle: "集结如何运作：",
+                howRallyWorks: "你的部队由Shrimp的英雄指挥。因此，即使你使用编队3或4加入，只要派出T5部队，集结将达到<span class='highlight'>最大战力</span>（最高HP x ATK x DEF）。",
+                importantNote: "重要提示：",
+                r4Note: "R4无法将成员踢出R5或R4的集结。因此，Shrimp必须自己处理并确保每个人都被通知。",
+                memberAssignmentsTitle: "成员分配：",
+                memberAssignments: "将专注于Shrimp的集结和四座外塔。",
+                t5InstructionsTitle: "T5成员指令：",
+                formation2: "编队2：",
+                formation2Desc: "加入Shrimp的集结。",
+                formation34: "编队3和4：",
+                formation34Desc: "必须部署到首都中心，准备在首都兵力耗尽时立即增援。",
+                formation1: "编队1：",
+                formation1Desc: "专注于四座外塔。根据战况占领或驻守。",
+                suzuTitle: "Suzu专属指令：",
+                suzuDesc: "Suzu必须先发起集结。<span class='highlight'>只有T4或更低</span>级别的部队可以加入Suzu的集结。",
+                criticalTitle: "关键提醒：",
+                rallyLock: "集结锁定：",
+                rallyLockDesc: "一旦你加入针对首都或塔的集结，你就无法创建或加入针对同一目标的另一个集结。请谨慎。",
+                contingencyPlan: "应急计划：",
+                contingencyDesc: "如果情况恶化，<span class='member-name'>Crab和Suzu</span>将先发起集结清除敌军。<span class='member-name'>Shrimp</span>随后立即跟进。",
+                garrisonTitle: "驻军管理：",
+                garrisonDesc: "我将持续将低级部队踢出首都，以确保首都充满T5部队。",
+                forbiddenTitle: "禁止行为：",
+                forbidden1: "成员<span class='danger'>严禁</span>加入Shrimp的集结（除非紧急情况，T4可以加入）。",
+                forbidden2: "所有T4和T3成员：首要任务是Suzu的集结。或者加入Crab在首都的集结或其他T5在外塔的集结。",
+                deploymentTitle: "部署说明：",
+                deploymentDesc: "Shrimp将使用编队2用于塔或加入集结，而编队3和4必须驻扎在首都附近以便在兵力耗尽时增援。",
+                serverRuleTitle: "服务器规则变更：",
+                serverRuleDesc: "新的首都事件规则不为野外战斗（击杀事件）计分。不要浪费部队在外面战斗。严格专注于首都或敌人占领的塔。",
+                date: "2025年11月29日"
+            },
+            ja: {
+                title: "首都戦略とラリー指示",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "勝利を確保するための最良の戦略は、<span class='highlight'>T5（ティア5）メンバーのみ</span>がShrimpの首都ラリーに参加することだと考えます。",
+                howRallyWorksTitle: "ラリーの仕組み：",
+                howRallyWorks: "あなたの部隊はShrimpのヒーローが指揮します。したがって、フォーメーション3や4で参加しても、T5部隊を送れば<span class='highlight'>最大戦力</span>（最高HP x ATK x DEF）を達成できます。",
+                importantNote: "重要な注意：",
+                r4Note: "R4はR5やR4のラリーからメンバーをキックできません。したがって、Shrimp自身が対処し、全員に通知する必要があります。",
+                memberAssignmentsTitle: "メンバー配置：",
+                memberAssignments: "はShrimpのラリーと4つの外塔に集中します。",
+                t5InstructionsTitle: "T5メンバーへの指示：",
+                formation2: "フォーメーション2：",
+                formation2Desc: "Shrimpのラリーに参加。",
+                formation34: "フォーメーション3＆4：",
+                formation34Desc: "首都中心に配置し、首都の兵力が尽きたら即座に増援準備。",
+                formation1: "フォーメーション1：",
+                formation1Desc: "4つの外塔に集中。状況に応じて占領または駐屯。",
+                suzuTitle: "Suzuへの特別指示：",
+                suzuDesc: "Suzuは最初にラリーを開始する必要があります。<span class='highlight'>T4以下</span>の部隊のみがSuzuのラリーに参加できます。",
+                criticalTitle: "重要な注意事項：",
+                rallyLock: "ラリーロック：",
+                rallyLockDesc: "首都やタワーへのラリーに参加すると、同じターゲットへの別のラリーを作成または参加できなくなります。注意してください。",
+                contingencyPlan: "緊急時計画：",
+                contingencyDesc: "状況が悪化した場合、<span class='member-name'>CrabとSuzu</span>が先にラリーを発動して敵軍を排除。<span class='member-name'>Shrimp</span>がすぐに続きます。",
+                garrisonTitle: "駐屯管理：",
+                garrisonDesc: "低ティア部隊を首都から継続的にキックし、T5部隊で満たされるようにします。",
+                forbiddenTitle: "禁止行為：",
+                forbidden1: "メンバーはShrimpのラリーへの参加を<span class='danger'>厳禁</span>（緊急時を除く、T4は参加可）。",
+                forbidden2: "全T4・T3メンバー：最優先はSuzuのラリー。または首都のCrabのラリーや外塔の他のT5ラリーに参加。",
+                deploymentTitle: "配置メモ：",
+                deploymentDesc: "Shrimpはタワーやラリー参加にフォーメーション2を使用し、フォーメーション3と4は兵力が尽きた時の増援のため首都近くに配置。",
+                serverRuleTitle: "サーバー全体のルール変更：",
+                serverRuleDesc: "新しい首都イベントルールでは野外戦闘（キルイベント）にポイントが付与されません。外で戦って部隊を無駄にしないでください。首都または敵が占領しているタワーに厳密に集中。",
+                date: "2025年11月29日"
+            },
+            ko: {
+                title: "수도 전략 및 랠리 지침",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "승리를 확보하기 위한 최선의 전략은 <span class='highlight'>T5(티어 5) 멤버만</span> Shrimp의 수도 랠리에 참가하도록 하는 것입니다.",
+                howRallyWorksTitle: "랠리 작동 방식:",
+                howRallyWorks: "당신의 부대는 Shrimp의 영웅이 지휘합니다. 따라서 포메이션 3이나 4로 참가해도 T5 부대를 보내면 <span class='highlight'>최대 전투력</span>(최고 HP x ATK x DEF)을 달성합니다.",
+                importantNote: "중요 참고:",
+                r4Note: "R4는 R5나 R4 랠리에서 멤버를 추방할 수 없습니다. 따라서 Shrimp가 직접 처리하고 모두에게 알려야 합니다.",
+                memberAssignmentsTitle: "멤버 배치:",
+                memberAssignments: "는 Shrimp의 랠리와 4개의 외곽 타워에 집중합니다.",
+                t5InstructionsTitle: "T5 멤버 지침:",
+                formation2: "포메이션 2:",
+                formation2Desc: "Shrimp의 랠리에 참가.",
+                formation34: "포메이션 3 & 4:",
+                formation34Desc: "수도 중심에 배치하고, 수도 병력 소진 시 즉시 지원 준비.",
+                formation1: "포메이션 1:",
+                formation1Desc: "4개의 외곽 타워에 집중. 상황에 따라 점령 또는 주둔.",
+                suzuTitle: "Suzu 전용 지침:",
+                suzuDesc: "Suzu가 먼저 랠리를 시작해야 합니다. <span class='highlight'>T4 이하</span> 부대만 Suzu의 랠리에 참가할 수 있습니다.",
+                criticalTitle: "중요 알림:",
+                rallyLock: "랠리 잠금:",
+                rallyLockDesc: "수도나 타워에 대한 랠리에 참가하면 같은 대상에 대한 다른 랠리를 생성하거나 참가할 수 없습니다. 주의하세요.",
+                contingencyPlan: "비상 계획:",
+                contingencyDesc: "상황이 악화되면 <span class='member-name'>Crab과 Suzu</span>가 먼저 랠리를 발동하여 적군을 제거. <span class='member-name'>Shrimp</span>가 즉시 뒤따릅니다.",
+                garrisonTitle: "주둔 관리:",
+                garrisonDesc: "저티어 부대를 수도에서 계속 추방하여 T5 부대로 채워지도록 합니다.",
+                forbiddenTitle: "금지 행위:",
+                forbidden1: "멤버는 Shrimp의 랠리 참가를 <span class='danger'>엄금</span>(긴급 상황 제외, T4 참가 가능).",
+                forbidden2: "모든 T4, T3 멤버: 최우선은 Suzu의 랠리. 또는 수도의 Crab 랠리나 외곽 타워의 다른 T5 랠리에 참가.",
+                deploymentTitle: "배치 참고:",
+                deploymentDesc: "Shrimp는 타워나 랠리 참가에 포메이션 2를 사용하고, 포메이션 3과 4는 병력 소진 시 지원을 위해 수도 근처에 배치.",
+                serverRuleTitle: "서버 전체 규칙 변경:",
+                serverRuleDesc: "새로운 수도 이벤트 규칙은 야외 전투(킬 이벤트)에 점수를 부여하지 않습니다. 밖에서 싸우며 부대를 낭비하지 마세요. 수도나 적이 점령한 타워에 엄격히 집중.",
+                date: "2025년 11월 29일"
+            },
+            es: {
+                title: "Estrategia de Capital e Instrucciones de Rally",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "Creo que la mejor estrategia para asegurar la victoria es <span class='highlight'>solo permitir miembros T5 (Tier 5)</span> unirse al rally de Shrimp contra la Capital.",
+                howRallyWorksTitle: "Cómo Funciona el Rally:",
+                howRallyWorks: "Tus tropas son comandadas por el héroe de Shrimp. Por lo tanto, aunque te unas usando Formación 3 o 4, mientras envíes tropas T5, el rally alcanzará <span class='highlight'>máxima fuerza</span> (Mayor HP x ATK x DEF).",
+                importantNote: "Nota Importante:",
+                r4Note: "Los R4 no pueden expulsar miembros de un rally R5 o R4. Por lo tanto, Shrimp debe manejarlo él mismo y asegurar que todos estén informados.",
+                memberAssignmentsTitle: "Asignaciones de Miembros:",
+                memberAssignments: "se enfocarán en el rally de Shrimp y las cuatro Torres Exteriores.",
+                t5InstructionsTitle: "Instrucciones para Miembros T5:",
+                formation2: "Formación 2:",
+                formation2Desc: "Unirse al rally de Shrimp.",
+                formation34: "Formaciones 3 y 4:",
+                formation34Desc: "Deben desplegarse al centro de la Capital, listos para reforzar inmediatamente cuando la Capital se quede sin tropas.",
+                formation1: "Formación 1:",
+                formation1Desc: "Enfocarse en las cuatro Torres Exteriores. Capturar o guarnecer según la situación.",
+                suzuTitle: "Instrucciones Específicas para Suzu:",
+                suzuDesc: "Suzu debe iniciar un rally primero. <span class='highlight'>Solo T4 o inferior</span> deben unirse al rally de Suzu.",
+                criticalTitle: "Recordatorios Críticos:",
+                rallyLock: "Bloqueo de Rally:",
+                rallyLockDesc: "Una vez que te unes a un rally contra la Capital o Torre, no puedes crear o unirte a otro rally contra el mismo objetivo. Ten cuidado.",
+                contingencyPlan: "Plan de Contingencia:",
+                contingencyDesc: "Si la situación empeora, <span class='member-name'>Crab y Suzu</span> lanzarán rallies primero para eliminar tropas enemigas. <span class='member-name'>Shrimp</span> seguirá inmediatamente después.",
+                garrisonTitle: "Gestión de Guarnición:",
+                garrisonDesc: "Expulsaré continuamente tropas de nivel inferior de la Capital para asegurar que permanezca llena de tropas T5.",
+                forbiddenTitle: "Acciones Prohibidas:",
+                forbidden1: "Los miembros tienen <span class='danger'>estrictamente prohibido</span> unirse al rally de Shrimp (a menos que sea emergencia, T4 puede unirse).",
+                forbidden2: "Todos los miembros T4 y T3: Su primera prioridad es el rally de Suzu. Alternativamente, únanse al rally de Crab en la Capital u otros rallies T5 contra las Torres Exteriores.",
+                deploymentTitle: "Nota de Despliegue:",
+                deploymentDesc: "Shrimp usará Formación 2 para torres o unirse a rallies, mientras que Formaciones 3 y 4 deben estar estacionadas cerca de la Capital para refuerzos cuando las tropas se agoten.",
+                serverRuleTitle: "Cambio de Regla del Servidor:",
+                serverRuleDesc: "Las nuevas reglas del evento Capital no otorgan puntos por combate en campo abierto (Evento de Muertes). No desperdicies tropas peleando afuera. Enfócate estrictamente en la Capital o las Torres si el enemigo las ocupa.",
+                date: "29 de Noviembre, 2025"
+            },
+            fr: {
+                title: "Stratégie de Capitale et Instructions de Rally",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "Je crois que la meilleure stratégie pour assurer la victoire est de <span class='highlight'>n'autoriser que les membres T5 (Tier 5)</span> à rejoindre le rally de Shrimp contre la Capitale.",
+                howRallyWorksTitle: "Comment Fonctionne le Rally:",
+                howRallyWorks: "Vos troupes sont commandées par le héros de Shrimp. Donc, même si vous rejoignez avec Formation 3 ou 4, tant que vous envoyez des troupes T5, le rally atteindra <span class='highlight'>force maximale</span> (HP x ATK x DEF les plus élevés).",
+                importantNote: "Note Importante:",
+                r4Note: "Les R4 ne peuvent pas expulser les membres d'un rally R5 ou R4. Donc, Shrimp doit gérer cela lui-même et s'assurer que tout le monde est informé.",
+                memberAssignmentsTitle: "Affectations des Membres:",
+                memberAssignments: "se concentreront sur le rally de Shrimp et les quatre Tours Extérieures.",
+                t5InstructionsTitle: "Instructions pour les Membres T5:",
+                formation2: "Formation 2:",
+                formation2Desc: "Rejoindre le rally de Shrimp.",
+                formation34: "Formations 3 et 4:",
+                formation34Desc: "Doivent être déployées au centre de la Capitale, prêtes à renforcer immédiatement quand la Capitale manque de troupes.",
+                formation1: "Formation 1:",
+                formation1Desc: "Se concentrer sur les quatre Tours Extérieures. Capturer ou garnir selon la situation.",
+                suzuTitle: "Instructions Spécifiques pour Suzu:",
+                suzuDesc: "Suzu doit initier un rally en premier. <span class='highlight'>Seules T4 ou inférieures</span> doivent rejoindre le rally de Suzu.",
+                criticalTitle: "Rappels Critiques:",
+                rallyLock: "Verrouillage de Rally:",
+                rallyLockDesc: "Une fois que vous rejoignez un rally contre la Capitale ou Tour, vous ne pouvez pas créer ou rejoindre un autre rally contre la même cible. Soyez prudent.",
+                contingencyPlan: "Plan de Contingence:",
+                contingencyDesc: "Si la situation se détériore, <span class='member-name'>Crab et Suzu</span> lanceront des rallies d'abord pour éliminer les troupes ennemies. <span class='member-name'>Shrimp</span> suivra immédiatement après.",
+                garrisonTitle: "Gestion de Garnison:",
+                garrisonDesc: "J'expulserai continuellement les troupes de niveau inférieur de la Capitale pour m'assurer qu'elle reste remplie de troupes T5.",
+                forbiddenTitle: "Actions Interdites:",
+                forbidden1: "Il est <span class='danger'>strictement interdit</span> aux membres de rejoindre le rally de Shrimp (sauf urgence, T4 peut rejoindre).",
+                forbidden2: "Tous les membres T4 et T3: Votre première priorité est le rally de Suzu. Alternativement, rejoignez le rally de Crab sur la Capitale ou d'autres rallies T5 contre les Tours Extérieures.",
+                deploymentTitle: "Note de Déploiement:",
+                deploymentDesc: "Shrimp utilisera Formation 2 pour les tours ou rejoindre les rallies, tandis que Formations 3 et 4 doivent être stationnées près de la Capitale pour les renforts quand les troupes sont épuisées.",
+                serverRuleTitle: "Changement de Règle du Serveur:",
+                serverRuleDesc: "Les nouvelles règles de l'événement Capitale n'accordent pas de points pour le combat en terrain ouvert (Événement de Kills). Ne gaspillez pas vos troupes à combattre dehors. Concentrez-vous strictement sur la Capitale ou les Tours si l'ennemi les occupe.",
+                date: "29 Novembre 2025"
+            },
+            de: {
+                title: "Hauptstadt-Strategie & Rally-Anweisungen",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "Ich glaube, die beste Strategie für den Sieg ist, <span class='highlight'>nur T5 (Tier 5) Mitglieder</span> Shrimps Rally gegen die Hauptstadt beitreten zu lassen.",
+                howRallyWorksTitle: "Wie das Rally funktioniert:",
+                howRallyWorks: "Deine Truppen werden von Shrimps Held befehligt. Daher, selbst wenn du mit Formation 3 oder 4 beitrittst, solange du T5-Truppen sendest, erreicht das Rally <span class='highlight'>maximale Stärke</span> (Höchste HP x ATK x DEF).",
+                importantNote: "Wichtiger Hinweis:",
+                r4Note: "R4s können keine Mitglieder aus einem R5- oder R4-Rally kicken. Daher muss Shrimp das selbst handhaben und sicherstellen, dass alle informiert sind.",
+                memberAssignmentsTitle: "Mitgliederzuweisungen:",
+                memberAssignments: "werden sich auf Shrimps Rally und die vier Außentürme konzentrieren.",
+                t5InstructionsTitle: "Anweisungen für T5-Mitglieder:",
+                formation2: "Formation 2:",
+                formation2Desc: "Shrimps Rally beitreten.",
+                formation34: "Formationen 3 & 4:",
+                formation34Desc: "Müssen im Zentrum der Hauptstadt aufgestellt werden, bereit zur sofortigen Verstärkung wenn die Hauptstadt keine Truppen mehr hat.",
+                formation1: "Formation 1:",
+                formation1Desc: "Auf die vier Außentürme konzentrieren. Je nach Situation erobern oder besetzen.",
+                suzuTitle: "Spezielle Anweisungen für Suzu:",
+                suzuDesc: "Suzu muss zuerst ein Rally starten. <span class='highlight'>Nur T4 oder niedriger</span> sollten Suzus Rally beitreten.",
+                criticalTitle: "Kritische Erinnerungen:",
+                rallyLock: "Rally-Sperre:",
+                rallyLockDesc: "Sobald du einem Rally gegen die Hauptstadt oder Turm beitrittst, kannst du kein anderes Rally gegen dasselbe Ziel erstellen oder beitreten. Sei vorsichtig.",
+                contingencyPlan: "Notfallplan:",
+                contingencyDesc: "Wenn sich die Situation verschlechtert, werden <span class='member-name'>Crab und Suzu</span> zuerst Rallies starten um feindliche Truppen zu beseitigen. <span class='member-name'>Shrimp</span> folgt sofort danach.",
+                garrisonTitle: "Garnisonsmanagement:",
+                garrisonDesc: "Ich werde kontinuierlich niedrigstufige Truppen aus der Hauptstadt kicken um sicherzustellen, dass sie mit T5-Truppen gefüllt bleibt.",
+                forbiddenTitle: "Verbotene Aktionen:",
+                forbidden1: "Mitgliedern ist es <span class='danger'>streng verboten</span>, Shrimps Rally beizutreten (außer im Notfall, T4 darf beitreten).",
+                forbidden2: "Alle T4- und T3-Mitglieder: Eure erste Priorität ist Suzus Rally. Alternativ tretet Crabs Rally auf die Hauptstadt oder anderen T5-Rallies gegen die Außentürme bei.",
+                deploymentTitle: "Aufstellungshinweis:",
+                deploymentDesc: "Shrimp wird Formation 2 für Türme oder Rally-Beitritt verwenden, während Formationen 3 und 4 nahe der Hauptstadt für Verstärkungen stationiert sein müssen wenn Truppen erschöpft sind.",
+                serverRuleTitle: "Serverweite Regeländerung:",
+                serverRuleDesc: "Die neuen Hauptstadt-Event-Regeln vergeben keine Punkte für Freifeld-Kämpfe (Kill-Event). Verschwende keine Truppen mit Kämpfen draußen. Konzentriere dich strikt auf die Hauptstadt oder die Türme wenn der Feind sie besetzt.",
+                date: "29. November 2025"
+            },
+            pt: {
+                title: "Estratégia da Capital e Instruções de Rally",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "Acredito que a melhor estratégia para garantir a vitória é <span class='highlight'>permitir apenas membros T5 (Tier 5)</span> participar do rally do Shrimp contra a Capital.",
+                howRallyWorksTitle: "Como o Rally Funciona:",
+                howRallyWorks: "Suas tropas são comandadas pelo herói do Shrimp. Portanto, mesmo se você entrar usando Formação 3 ou 4, desde que envie tropas T5, o rally alcançará <span class='highlight'>força máxima</span> (Maior HP x ATK x DEF).",
+                importantNote: "Nota Importante:",
+                r4Note: "R4s não podem expulsar membros de um rally R5 ou R4. Portanto, Shrimp deve lidar com isso sozinho e garantir que todos sejam informados.",
+                memberAssignmentsTitle: "Atribuições de Membros:",
+                memberAssignments: "focarão no rally do Shrimp e nas quatro Torres Externas.",
+                t5InstructionsTitle: "Instruções para Membros T5:",
+                formation2: "Formação 2:",
+                formation2Desc: "Participar do rally do Shrimp.",
+                formation34: "Formações 3 e 4:",
+                formation34Desc: "Devem ser posicionadas no centro da Capital, prontas para reforçar imediatamente quando a Capital ficar sem tropas.",
+                formation1: "Formação 1:",
+                formation1Desc: "Focar nas quatro Torres Externas. Capturar ou guarnecer dependendo da situação.",
+                suzuTitle: "Instruções Específicas para Suzu:",
+                suzuDesc: "Suzu deve iniciar um rally primeiro. <span class='highlight'>Apenas T4 ou inferior</span> devem participar do rally da Suzu.",
+                criticalTitle: "Lembretes Críticos:",
+                rallyLock: "Bloqueio de Rally:",
+                rallyLockDesc: "Uma vez que você participa de um rally contra a Capital ou Torre, você não pode criar ou participar de outro rally contra o mesmo alvo. Tenha cuidado.",
+                contingencyPlan: "Plano de Contingência:",
+                contingencyDesc: "Se a situação piorar, <span class='member-name'>Crab e Suzu</span> lançarão rallies primeiro para eliminar tropas inimigas. <span class='member-name'>Shrimp</span> seguirá imediatamente depois.",
+                garrisonTitle: "Gestão de Guarnição:",
+                garrisonDesc: "Vou continuamente expulsar tropas de nível inferior da Capital para garantir que permaneça cheia de tropas T5.",
+                forbiddenTitle: "Ações Proibidas:",
+                forbidden1: "Membros são <span class='danger'>estritamente proibidos</span> de participar do rally do Shrimp (a menos que seja emergência, T4 pode participar).",
+                forbidden2: "Todos os membros T4 e T3: Sua primeira prioridade é o rally da Suzu. Alternativamente, participem do rally do Crab na Capital ou outros rallies T5 contra as Torres Externas.",
+                deploymentTitle: "Nota de Posicionamento:",
+                deploymentDesc: "Shrimp usará Formação 2 para torres ou participar de rallies, enquanto Formações 3 e 4 devem estar estacionadas perto da Capital para reforços quando as tropas se esgotarem.",
+                serverRuleTitle: "Mudança de Regra do Servidor:",
+                serverRuleDesc: "As novas regras do evento Capital não concedem pontos por combate em campo aberto (Evento de Kills). Não desperdice tropas lutando fora. Foque estritamente na Capital ou nas Torres se o inimigo as ocupar.",
+                date: "29 de Novembro de 2025"
+            },
+            ru: {
+                title: "Стратегия Столицы и Инструкции по Ралли",
+                subtitle: "Server 225 - State of Supremacy",
+                mainStrategy: "Я считаю, что лучшая стратегия для победы - <span class='highlight'>разрешить только участникам T5 (Уровень 5)</span> присоединиться к ралли Shrimp против Столицы.",
+                howRallyWorksTitle: "Как Работает Ралли:",
+                howRallyWorks: "Вашими войсками командует герой Shrimp. Поэтому, даже если вы присоединитесь с Формацией 3 или 4, пока вы отправляете войска T5, ралли достигнет <span class='highlight'>максимальной силы</span> (Наивысшие HP x ATK x DEF).",
+                importantNote: "Важное Примечание:",
+                r4Note: "R4 не могут исключать участников из ралли R5 или R4. Поэтому Shrimp должен справиться с этим сам и убедиться, что все проинформированы.",
+                memberAssignmentsTitle: "Распределение Участников:",
+                memberAssignments: "сосредоточатся на ралли Shrimp и четырёх Внешних Башнях.",
+                t5InstructionsTitle: "Инструкции для Участников T5:",
+                formation2: "Формация 2:",
+                formation2Desc: "Присоединиться к ралли Shrimp.",
+                formation34: "Формации 3 и 4:",
+                formation34Desc: "Должны быть развёрнуты в центре Столицы, готовы к немедленному подкреплению когда в Столице закончатся войска.",
+                formation1: "Формация 1:",
+                formation1Desc: "Сосредоточиться на четырёх Внешних Башнях. Захватить или гарнизонировать в зависимости от ситуации.",
+                suzuTitle: "Специальные Инструкции для Suzu:",
+                suzuDesc: "Suzu должна начать ралли первой. <span class='highlight'>Только T4 или ниже</span> должны присоединиться к ралли Suzu.",
+                criticalTitle: "Критические Напоминания:",
+                rallyLock: "Блокировка Ралли:",
+                rallyLockDesc: "После присоединения к ралли против Столицы или Башни вы не можете создать или присоединиться к другому ралли против той же цели. Будьте осторожны.",
+                contingencyPlan: "План на Случай Непредвиденных Обстоятельств:",
+                contingencyDesc: "Если ситуация ухудшится, <span class='member-name'>Crab и Suzu</span> запустят ралли первыми чтобы очистить вражеские войска. <span class='member-name'>Shrimp</span> последует сразу после.",
+                garrisonTitle: "Управление Гарнизоном:",
+                garrisonDesc: "Я буду постоянно исключать войска низкого уровня из Столицы чтобы она оставалась заполненной войсками T5.",
+                forbiddenTitle: "Запрещённые Действия:",
+                forbidden1: "Участникам <span class='danger'>строго запрещено</span> присоединяться к ралли Shrimp (кроме экстренных случаев, T4 может присоединиться).",
+                forbidden2: "Все участники T4 и T3: Ваш первый приоритет - ралли Suzu. Альтернативно, присоединяйтесь к ралли Crab на Столицу или другим ралли T5 против Внешних Башен.",
+                deploymentTitle: "Примечание по Развёртыванию:",
+                deploymentDesc: "Shrimp будет использовать Формацию 2 для башен или присоединения к ралли, в то время как Формации 3 и 4 должны быть размещены рядом со Столицей для подкреплений когда войска истощены.",
+                serverRuleTitle: "Изменение Правил Сервера:",
+                serverRuleDesc: "Новые правила события Столицы не начисляют очки за бой в открытом поле (Событие Убийств). Не тратьте войска на бои снаружи. Строго сосредоточьтесь на Столице или Башнях если враг их занимает.",
+                date: "29 ноября 2025"
+            }
+        };
+
+        const langNames = {
+            en: 'English', vi: 'Tiếng Việt', zh: '中文', ja: '日本語',
+            ko: '한국어', es: 'Español', fr: 'Français', de: 'Deutsch',
+            pt: 'Português', ru: 'Русский'
+        };
+
+        function toggleDropdown() {
+            const selected = document.querySelector('.select-selected');
+            const items = document.getElementById('selectItems');
+            selected.classList.toggle('open');
+            items.classList.toggle('open');
+        }
+
+        function selectLanguage(lang, name) {
+            document.getElementById('selectedLang').textContent = name;
+            document.querySelectorAll('.select-item').forEach(item => {
+                item.classList.remove('selected');
+                if (item.dataset.value === lang) item.classList.add('selected');
+            });
+            toggleDropdown();
+            changeLanguage(lang);
+        }
+
+        function changeLanguage(lang) {
+            localStorage.setItem('selectedLanguage', lang);
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.innerHTML = translations[lang][key];
+                }
+            });
+            document.documentElement.lang = lang;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup click events for dropdown items
+            document.querySelectorAll('.select-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    selectLanguage(this.dataset.value, this.textContent);
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.custom-select')) {
+                    document.querySelector('.select-selected').classList.remove('open');
+                    document.getElementById('selectItems').classList.remove('open');
+                }
+            });
+
+            // Load saved language
+            let savedLang = localStorage.getItem('selectedLanguage');
+            if (!savedLang) {
+                const browserLang = navigator.language.slice(0, 2);
+                savedLang = translations[browserLang] ? browserLang : 'en';
+            }
+            document.getElementById('selectedLang').textContent = langNames[savedLang];
+            document.querySelectorAll('.select-item').forEach(item => {
+                if (item.dataset.value === savedLang) item.classList.add('selected');
+            });
+            changeLanguage(savedLang);
+        });
+    </script>
+</body>
+</html>
